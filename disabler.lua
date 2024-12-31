@@ -2,26 +2,27 @@ local mt = getrawmetatable(game)
 local oldindex = mt.__index
 setreadonly(mt,false)
 
-local __namecall
-__namecall = hookmetamethod(game, "__namecall", function(...)
-  local args = {...}
-  local self = args[1]
-	local method = getnamecallmethod()
-	local caller = getcallingscript()
+local anticheatRemotes = {
+        "BANREMOTE", "PERMAIDBAN", "KICKREMOTE", "BR_KICKPC", "BR_KICKMOBILE",
+        "OneMoreTime", "CHECKER_1", "TeleportDetect", "CHECKER", "GUI_CHECK",
+        "checkingSPEED", "PERMA-BAN", "PERMABAN", "BreathingHAMON", "JJARC",
+        "TakePoisonDamage", "FORCEFIELD", "Christmas_Sock", "VirusCough",
+        "Symbiote", "Symbioted", "RequestAFKDisplay"
+}
 
-	if (method == "FireServer" and self == MainEvent and tablefind(Flags, args[2])) then
-    return
-	end
-
-	if (not checkcaller() and getfenv(2).crash) then
-		hookfunction(getfenv(2).crash, function()
-			warn("Game Attempted To Crash, Evaded") 
-		end)
-	end
-
-	-- //
-	return __namecall(...)
+local fireHook
+fireHook = hookmetamethod(game, "__namecall", function(self, ...)
+	local method, arg = getnamecallmethod(), {...}
+	return (method == "FireServer" and table.find(anticheatRemotes, arg[2])) and nil or fireHook(self, ...)
 end)
+
+local remoteNames = {"MainEvent", "Bullets", "Remote", "MAINEVENT"}
+for _, remote in ipairs(game.ReplicatedStorage:GetDescendants()) do
+	if remote:IsA("RemoteEvent") and table.find(remoteNames, remote.Name) then
+		return remote
+	end
+end
+
 
 mt.__index = function(indexed,property)
 	if indexed == "Humanoid" and property == "WalkSpeed" then
